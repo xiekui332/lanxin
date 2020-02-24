@@ -5,13 +5,14 @@
             <span>需求整理</span>
         </div>
 
-        <TaskInfo />
+        <TaskInfo :task='task' :tFileList='tFileList' :userList='userList' :countName='countName' :isChild='isChild' :sonTask='sonTask' />
         
     </div>
 </template>
 
 <script>
 import TaskInfo from "@/components/TaskInfo";
+import { getProDetail } from '@/service/api'
 export default {
     props: {
 
@@ -21,7 +22,13 @@ export default {
     },
     data() {
         return {
-            checked:false
+            checked:false,
+            task:{},
+            tFileList:[],
+            userList:[],
+            countName:'',
+            isChild:false,
+            sonTask:[]
         };
     },
     computed: {
@@ -31,10 +38,31 @@ export default {
 
     },
     methods: {
-
+        init() {
+            let params = {
+                id: this.$route.query.id
+            }
+            getProDetail(params).then((res) => {
+                // console.log(res)
+                this.task = res.task
+                // this.tFileList = tFileList
+                this.tFileList = res.tFileList
+                this.userList = res.task.userList
+                this.countName = res.countName
+                this.sonTask = res.sonTask
+                if(res.sonTask && res.sonTask.length) {
+                    this.isChild = true
+                }else{
+                    this.isChild = false
+                }
+            })
+            .catch((err) => {
+                this.$toast('请求失败');
+            })
+        }
     },
     created() {
-
+        this.init()
     },
     mounted() {
 

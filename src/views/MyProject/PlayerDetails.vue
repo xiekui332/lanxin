@@ -1,32 +1,19 @@
 <template>
     <div class="wrapper">
         <div class="container">
-            <div class="player-item">
+            <div class="player-item" v-for="(item) in playerList" :key="item.id">
                 <div class="img-box">
-                    <span>谢</span>
-                    <!-- <img src="" alt=""> -->
+                    <img v-if="item.user_img" :src="item.user_img" alt="">
+                    <span v-else>{{item.username ? item.username.substring(0, 1):'无'}}</span>
                 </div>
-                <p class="name">张三</p>
-            </div>
-            <div class="player-item">
-                <div class="img-box">
-                    <span>谢</span>
-                    <!-- <img src="" alt=""> -->
-                </div>
-                <p class="name">张三</p>
-            </div>
-            <div class="player-item">
-                <div class="img-box">
-                    <span>谢</span>
-                    <!-- <img src="" alt=""> -->
-                </div>
-                <p class="name">张三</p>
+                <p class="name">{{item.username}}</p>
             </div>
         </div>
     </div>
 </template>
 
 <script>
+import { getProDetail } from '@/service/api'
 export default {
     props: {
 
@@ -36,7 +23,7 @@ export default {
     },
     data() {
         return {
-
+            playerList:[]
         };
     },
     computed: {
@@ -46,10 +33,25 @@ export default {
 
     },
     methods: {
-
+        init() {
+            let params = {
+                id: this.$route.query.id
+            }
+            getProDetail(params).then((res) => {
+                if(res.task && res.task.userList && res.task.userList.length) {
+                    this.playerList =  res.task.userList
+                }else{
+                    this.$toast('暂无数据');
+                }
+                
+            })
+            .catch((err) => {
+                this.$toast('请求失败');
+            })
+        }
     },
     created() {
-
+        this.init()
     },
     mounted() {
 

@@ -36,3 +36,41 @@ export const format = (num) => {
 
 
 export const regexFile = /\.(gif|jpg|jpeg|png|GIF|JPG|PNG|PDF|pdf)$/
+
+export const timestampToTime = (timestamp, type) => {
+    // var date = new Date(timestamp * 1000);//时间戳为10位需*1000，时间戳为13位的话不需乘1000
+    var date = new Date(timestamp)
+    var Y = date.getFullYear() + '-';
+    var M = (date.getMonth()+1 < 10 ? '0'+(date.getMonth()+1) : date.getMonth()+1) + '-';
+    var D = (date.getDate() < 10 ? '0'+date.getDate() : date.getDate()) + ' ';
+    var h = (date.getHours() < 10 ? '0'+date.getHours() : date.getHours()) + ':';
+    var m = (date.getMinutes() < 10 ? '0'+date.getMinutes() : date.getMinutes());
+    var s = (date.getSeconds() < 10 ? '0'+date.getSeconds() : date.getSeconds());
+    if(type == 2) {
+        return Y+M+D+' '+h+m;
+    }else{
+        return M+D;
+    }
+    
+}
+
+export const getCaptionLine = (obj,state) => {
+    var index=obj.lastIndexOf("\-");
+    if(state==0){
+        obj=obj.substring(0,index);
+    }else {
+        obj=obj.substring(index+1,obj.length);
+    }
+    return obj;
+}
+
+
+export const getCaptionPoint = (obj,state) => {
+    var index=obj.lastIndexOf("\·");
+    if(state==0){
+        obj=obj.substring(0,index);
+    }else {
+        obj=obj.substring(index+1,obj.length);
+    }
+    return obj;
+}

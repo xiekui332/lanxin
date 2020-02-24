@@ -1,12 +1,11 @@
 <template>
     <div class="wrapper">
-        <div class="level level1">普通</div>
-        <div class="level level2">一般</div>
-        <div class="level level3">紧急</div>
+        <div class="level" :style="{'background':item.bq_color}" v-for="(item) in tagList" :key="item.id">{{item.name}}</div>
     </div>
 </template>
 
 <script>
+import { getProDetail } from '@/service/api'
 export default {
     props: {
 
@@ -16,7 +15,7 @@ export default {
     },
     data() {
         return {
-
+            tagList:[]
         };
     },
     computed: {
@@ -26,10 +25,25 @@ export default {
 
     },
     methods: {
-
+        init() {
+            let params = {
+                id: this.$route.query.id
+            }
+            getProDetail(params).then((res) => {
+                if(res.tFileList && res.tFileList[2] && res.tFileList[2].lableList && res.tFileList[2].lableList.length) {
+                    this.tagList =  res.tFileList[2].lableList
+                }else{
+                    this.$toast('暂无数据');
+                }
+                
+            })
+            .catch((err) => {
+                this.$toast('请求失败');
+            })
+        }
     },
     created() {
-
+        this.init()
     },
     mounted() {
 

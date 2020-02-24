@@ -28,6 +28,7 @@
 
 <script>
 import { handleLogin } from '../service/api'
+import { setSession } from '@/service/utils'
 export default {
     name: 'Login',
     props: {
@@ -56,19 +57,25 @@ export default {
                 return
             }
             let params = {
-                userName:'wang',
-                password:'123'
+                userName:this.acount,
+                password:this.pass
             }
 
             handleLogin(params).then((res) => {
-                console.log(res)
+                if(res.msg == '登录成功') {
+                    setSession('sessionId', res.sessionId)
+                    this.$router.push({
+                        path: '/index'
+                    })
+                }else{
+                    this.$toast(res.data.msg);
+                }
             })
             .catch((err) => {
                 console.log(err)
+                this.$toast('请求失败');
             })
-            // this.$router.push({
-            //     path: '/index'
-            // })
+            
         }
     },
     created() {

@@ -1,17 +1,19 @@
 <template>
     <div class="taskDetails">
         <div class="head">
-            <van-checkbox v-model="checked" shape="square"></van-checkbox>
-            <span>需求整理</span>
+            <van-checkbox v-model="checked" :disabled="isDisabled" shape="square" @change='changeProState(checked)'></van-checkbox>
+            <span>{{task.name}}</span>
         </div>
 
-        <TaskInfo />
+        <TaskInfo :task='task' :tFileList='tFileList' :userList='userList' :countName='countName' :isChild='isChild' :sonTask='sonTask' />
         
     </div>
 </template>
 
 <script>
 import TaskInfo from "@/components/TaskInfo";
+import { getProDetail } from '@/service/api'
+// import { tFileList } from '@/service/test'
 export default {
     props: {
 
@@ -21,7 +23,14 @@ export default {
     },
     data() {
         return {
-            checked:false
+            checked:false,
+            isDisabled:false,
+            task:{},
+            tFileList:[],
+            userList:[],
+            countName:'',
+            isChild:false,
+            sonTask:[]
         };
     },
     computed: {
@@ -31,10 +40,53 @@ export default {
 
     },
     methods: {
+        init() {
+            let params = {
+                id: this.$route.query.id
+            }
+            getProDetail(params).then((res) => {
+                // console.log(res)
+                this.task = res.task
+                // this.tFileList = tFileList
+                this.tFileList = res.tFileList
+                this.userList = res.task.userList
+                this.countName = res.countName
+                this.sonTask = res.sonTask
+                if(res.sonTask && res.sonTask.length) {
+                    this.isChild = true
+                }else{
+                    this.isChild = false
+                }
 
+                for(let i = 0; i < this.sonTask.length; i ++){
+                    if(this.sonTask[i].state == 0) {
+                        this.isDisabled = true
+                    }else{
+                        this.isDisabled = false
+                    }
+                }
+
+                if(res.state == 0) {
+                    this.checked = false
+                    this.isDisabled = false
+                }else if(res.state == 1) {
+                    this.checked = true
+                    this.isDisabled = true
+                }
+            })
+            .catch((err) => {
+                this.$toast('请求失败');
+            })
+        },
+
+        changeProState(val) {
+            if(val == true) {
+                
+            }
+        }
     },
     created() {
-
+        this.init()
     },
     mounted() {
 

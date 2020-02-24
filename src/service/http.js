@@ -1,8 +1,9 @@
 import axios from 'axios' // 引入axios
 import $router from '../router/index'
+import QS from 'qs'
 import { getSession,setSession } from './utils'
 
-const service = axios.create({
+axios.create({
     baseURL: process.env.NODE_ENV === "development"?'':'http://major.leonp.club:8181', // 请求URL前缀。和/config/index.js文件中api配置及后台保持同步更改。
     timeout: 10000, // 超时
     withCredentials: true // 表示跨域请求时是否需要使用凭证，即cookie等验证信息。参考：https://developer.mozilla.org/zh-CN/docs/Web/API/XMLHttpRequest/withCredentials
@@ -13,13 +14,11 @@ const service = axios.create({
 
 // 添加 request 拦截器
 
-service.interceptors.request.use(
+axios.interceptors.request.use(
     
     config => {
-        let token = getSession('token')
-        // config.headers = {
-        //     'Content-Type':'application/x-www-form-urlencoded'
-        // }
+        // let token = getSession('token')
+        
         // if(token) {
         //     config.headers = {
         //         // "Authorization":"Bearer " + JSON.parse(sessionStorage.getItem("token")),
@@ -38,7 +37,7 @@ service.interceptors.request.use(
 
 
 // 添加 response 拦截器
-service.interceptors.response.use(config => {
+axios.interceptors.response.use(config => {
     // console.log(config)
     if(config.status==200){
         return config.data;
@@ -70,4 +69,27 @@ service.interceptors.response.use(config => {
 })
 
 
-export default service
+// 封装axios的get方法和post方法
+export function get (url, params) {
+    return new Promise((resolve, reject) => {
+        axios.get(url, { params: params })
+            .then(res => {
+                resolve(res.data)
+            })
+            .catch(err => {
+                reject(err.data)
+            })
+    })
+}
+
+export function post (url, params) {
+    return new Promise((resolve, reject) => {
+        axios.post(url, QS.stringify(params))
+            .then(res => {
+                resolve(res.data)
+            })
+            .catch(err => {
+                reject(err.data)
+            })
+    })
+}

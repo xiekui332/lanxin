@@ -9,9 +9,10 @@
                     </div>
                     <div class="list-right">
                         <van-icon name="arrow" size=".4rem" color="#DCDCDC" />
-                        <div class="name">谢</div>
-                        <div class="name">谢</div>
-                        <div class="name">谢</div>
+                        <div class="name" v-for="(item) in user" :key="item.id">
+                            <img v-if="item.user_img" :src="item.user_img" alt="">
+                            <span v-else>{{item.username?item.username.substring(0, 1):'无'}}</span>
+                        </div>
                     </div>
                 </div>
 
@@ -21,7 +22,7 @@
                         <span>开始时间</span>
                     </div>
                     <div class="list-right">
-                        <span>2020/02/18 10:00</span>
+                        <span>{{newTask.startTime}}</span>
                     </div>
                 </div>
 
@@ -31,7 +32,7 @@
                         <span>截止时间</span>
                     </div>
                     <div class="list-right">
-                        <span>2020/02/19 10:00</span>
+                        <span>{{newTask.endTime}}</span>
                     </div>
                 </div>
 
@@ -42,8 +43,7 @@
                     </div>
                     <div class="list-right">
                         <van-icon name="arrow" size=".4rem" color="#DCDCDC" />
-                        <div class="pentagon normal">普通</div>
-                        <div class="pentagon sort">一般</div>
+                        <div class="pentagon" :style="{'background':item.bq_color}" v-for="(item) in newTFileList" :key="item.id">{{item.name}}</div>
                     </div>
                 </div>
                 
@@ -54,10 +54,11 @@
                     </div>
                     <div class="list-right">
                         <van-icon name="arrow" size=".4rem" color="#DCDCDC" />
-                        <div class="name"><img src="../assets/more.png" alt=""></div>
-                        <div class="name">谢</div>
-                        <div class="name">谢</div>
-                        <div class="name">谢</div>
+                        <div class="name" v-show="morePlayer"><img src="../assets/more.png" alt=""></div>
+                        <div class="name" v-for="(item) in newUserList" :key="item.id">
+                            <img v-if="item.user_img" :src="item.user_img" alt="">
+                            <span v-else>{{item.username?item.username.substring(0, 1):'无'}}</span>
+                        </div>
                     </div>
                 </div>
 
@@ -67,7 +68,7 @@
                         <span>所属板块</span>
                     </div>
                     <div class="list-right">
-                        <span>需求收集</span>
+                        <span class="newCountName">{{newCountName}}</span>
                     </div>
                 </div>
 
@@ -76,7 +77,7 @@
                         <img class="list-last-img" src="../assets/goal.png" alt="">
                         <div class="other">
                             <span>任务目标</span>
-                            <span>完成对需求的收集，初步分析和整理。</span>
+                            <span>{{goalObj.content?goalObj.content:'暂无'}}</span>
                         </div>
                         
                     </div>
@@ -85,27 +86,17 @@
                     </div>
                 </div>  
 
-                <div class="child-list">
+                <div class="child-list" v-show="isChild">
                     <div class="list-left">
                         <img class="list-last-img" src="../assets/child.png" alt="">
                     </div>
                     <div class="list-right">
                         <div class="other">
                             <span class="name">子任务</span>
-                            <div class="child-item">
+                            <div class="child-item" v-for="(item, index) in newSonTask" :key="item.id">
                                 <div class="item-left">
-                                    <van-checkbox v-model="checked" shape="square"></van-checkbox>
-                                    <span class="item-txt" @click="toChildTaskDetail()">汇总收集的需求</span>
-                                </div>
-                                <div class="item-right">
-                                    <van-icon name="arrow" size=".5rem" color="#DCDCDC" />
-                                </div>
-                            </div>
-
-                            <div class="child-item">
-                                <div class="item-left">
-                                    <van-checkbox v-model="checked" shape="square"></van-checkbox>
-                                    <span class="item-txt">汇总收集的需求</span>
+                                    <van-checkbox v-model="item.checked" :disabled="item.checked" shape="square"></van-checkbox>
+                                    <span class="item-txt" @click="toChildTaskDetail()">{{item.name}}</span>
                                 </div>
                                 <div class="item-right">
                                     <van-icon name="arrow" size=".5rem" color="#DCDCDC" />
@@ -120,7 +111,7 @@
                         <img class="list-last-img" src="../assets/mark.png" alt="">
                         <div class="other">
                             <span>备注</span>
-                            <span>如果在目标期限没有完成可适当延长需求收集时间</span>
+                            <span>{{remarkObj.content?remarkObj.content:'暂无'}}</span>
                         </div>
                         
                     </div>
@@ -135,51 +126,130 @@
 </template>
 
 <script>
+import { timestampToTime } from "@/service/utils"
 export default {
-    props: {
-
-    },
+    props: [
+        'task',
+        'tFileList',
+        'userList',
+        'countName',
+        'isChild',
+        'sonTask'
+    ],
     components: {
 
     },
     data() {
         return {
-            checked:false
+            checked:false,
+            newTask:{},
+            newTFileList:[],
+            isTag:false,
+            user:[],
+            newUserList:[],
+            morePlayer:false,
+            newCountName:'',
+            goalObj:{},
+            remarkObj:{},
+            newSonTask:[]
         };
     },
     computed: {
 
     },
     watch: {
+        task(params) {
+            params.startTime = timestampToTime(params.startTime, 2)
+            params.endTime = timestampToTime(params.endTime, 2)
+            this.newTask = params
+            this.user.push(params.user)
+        },
 
+        tFileList(params) {
+            if(params && params[2] && params[2].lableList) {
+                this.newTFileList = params[2].lableList
+                if(this.newTFileList.length > 3) {
+                    this.isTag = true
+                }else{
+                    this.isTag = false
+                }
+                this.newTFileList = this.newTFileList.slice(0, 3)
+            }
+
+            if(params && params[3]) {
+                this.goalObj = params[3]
+            }
+
+            if(params && params[0]) {
+                this.remarkObj = params[0]
+            }
+            
+        },
+        userList(params) {
+            if(params) {
+                if(this.newUserList.length > 5) {
+                    this.morePlayer = true
+                    this.morePlayer = this.morePlayer.slice(0, 5)
+                }else{
+                    this.newUserList = params
+                }
+            }
+        },
+
+        countName(params) {
+            this.newCountName = params
+        },
+
+        sonTask(params) {
+            for(let i = 0; i < params.length; i ++) {
+                if(params[i].state == 0) {
+                    params[i].checked = false
+                }else if(params[i].state == 1) {
+                    params[i].checked = true
+                }
+            }
+            this.newSonTask = params
+        }
     },
     methods: {
         toChildTaskDetail() {
             this.$router.push({
-                path:'/childTaskDetail'
+                path:'/childTaskDetail',
+                query: {
+                    id: this.$route.query.id
+                }
             })
         },
         toTagDetails() {
             this.$router.push({
-                path:'/tagDetail'
+                path:'/tagDetail',
+                query: {
+                    id: this.$route.query.id
+                }
             })
         },
         toPlayerDetails() {
             this.$router.push({
-                path:'/playerDetail'
+                path:'/playerDetail',
+                query: {
+                    id: this.$route.query.id
+                }
             })
         },
         toChargeDetails() {
             this.$router.push({
-                path:'/chargeDetail'
+                path:'/chargeDetail',
+                query: {
+                    id: this.$route.query.id
+                }
             })
         }
     },
     created() {
-
+        
     },
     mounted() {
-
+        
     },
 };
 </script>
@@ -234,13 +304,26 @@ export default {
                             width: 100%;
                             height: 100%;
                         }
+                        >span{
+                            display: inline-block;
+                            text-align: center;
+                            line-height: 24px;
+                        }
                     }
                     >span{
                         font-size:14px;
                         font-family:PingFangSC-Regular,PingFang SC;
                         font-weight:400;
                         color:rgba(153,153,153,1);
-                    }        
+                    }  
+                    .newCountName{
+                        display: inline-block;
+                        width: 230px;
+                        text-align: right;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                    }      
                     .pentagon{
                         width:50px;
                         height:23px;
@@ -341,7 +424,7 @@ export default {
                                     transform: scale(.8);
                                 }
                                 .item-txt{
-                                    width: 200px;
+                                    width: 230px;
                                     font-size:15px;
                                     line-height: 50px;
                                     text-align: left;
@@ -363,4 +446,5 @@ export default {
         }
     }
 }
+
 </style>

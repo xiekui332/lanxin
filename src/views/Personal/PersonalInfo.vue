@@ -2,7 +2,7 @@
     <div class="personal">
         <div class="back">
             <div class="personal-info">
-                <span>设计师02</span>
+                <span>{{account}}</span>
                 <div>
                     <img :src="imgDefault" alt="">
                 </div>
@@ -17,7 +17,7 @@
                     <span>职位</span>
                 </div>
                 <div class="basic-right">
-                    <span>产品经理</span>
+                    <span>{{address}}</span>
                 </div>
             </div>
             <div class="basic-item">
@@ -34,6 +34,7 @@
 </template>
 
 <script>
+import { getPersonalInfo } from '@/service/api'
 export default {
     props: {
 
@@ -43,8 +44,10 @@ export default {
     },
     data() {
         return {
-            imgDefault:require('../../assets/default.png'),
-            phone:18334794858
+            imgDefault:'',
+            phone:'',
+            account:'',
+            address:''
         };
     },
     computed: {
@@ -59,10 +62,20 @@ export default {
 
     },
     methods: {
-
+        init() {
+            getPersonalInfo().then((res) => {
+                this.account = res.username
+                this.address = res.address
+                this.phone = res.phone
+                this.imgDefault = res.user_img
+            })
+            .catch((err) => {
+                this.$toast('请求失败');
+            })
+        }
     },
     created() {
-
+        this.init()
     },
     mounted() {
 
