@@ -1,19 +1,23 @@
 <template>
     <div class="my-p">
-        <div class="p-search">
-            <van-search
-            v-model="value"
-            placeholder="搜索项目"
-            input-align="center"
-            />
-        </div>
+        <header>
+            <div class="p-search">
+                <van-search
+                v-model="value"
+                placeholder="搜索项目"
+                input-align="center"
+                @search='searchName'
+                />
+            </div>
+        </header>
+        
 
 
         <div class="wrapper">
-            <div class="item" v-for="(item, index) in 4" :key="index">
+            <div class="item" v-for="(item, index) in myProjectList" :key="index">
                 <div class="item-left">
-                    <div>参</div>
-                    <span @click="toBoard()">参考项目</span>
+                    <div>{{item.name?item.name.substring(0, 1):'无'}}</div>
+                    <span @click="toBoard(item)">{{item.name}}</span>
                 </div>
                 <div class="item-right" @click="getProDetail(item)"><van-icon name="arrow" size=".4rem" color="#DCDCDC" /></div>
             </div>
@@ -22,6 +26,7 @@
 </template>
 
 <script>
+import { getMyProject, getPersonalInfo, getMyEid, getEidRole } from '@/service/api'
 export default {
     props: {
 
@@ -31,7 +36,11 @@ export default {
     },
     data() {
         return {
-            value:''
+            value:'',
+            uid:'',
+            eid:'',
+            myProjectList:[],
+            state:''
         };
     },
     computed: {
@@ -43,18 +52,100 @@ export default {
     methods: {
         getProDetail(item) {
             this.$router.push({
-                path:'/projectDetail'
+                path:'/projectDetail',
+                query: {
+                    id:item.id,
+                    eid:item.eid,
+                    file:item.file,
+                    name:item.name
+                }
             })
         },
 
-        toBoard() {
+        toBoard(item) {
             this.$router.push({
-                path:'/board'
+                path:'/board',
+                query: {
+                    eid:item.eid
+                }
+            })
+        },
+
+        init() {
+
+            getPersonalInfo().then((res) => {
+                this.uid = res.id
+                let params = {
+                    uid:this.uid
+                }
+                getMyEid(params).then((res) => {
+                    if(res && res.length) {
+                        this.eid = res[0].id
+                    }
+
+                    let params = {
+                        eid:this.eid
+                    }
+
+                    getEidRole(params).then((res) => {
+                        if(res && res.enterprisePermissionList) {
+                            for(let i = 0; i < res.enterprisePermissionList.length; i ++) {
+                                if(res.enterprisePermissionList[i].id == 7) {
+                                    this.state = res.enterprisePermissionList[i].status
+                                }
+                            }
+                        }
+                        let params = {
+                            eid:this.eid,
+                            name:this.value,
+                            state:this.state
+                        }
+                        getMyProject(params).then((res) => {
+                            if(res && res.length) {
+                                this.myProjectList = res
+                            }
+                        })
+                        .catch((err) => {
+                            this.$toast('请求失败');
+                        })
+                    })
+                    .catch((err) => {
+                        this.$toast('请求失败');
+                    })
+
+                    
+
+                })
+                .catch((err) => {
+                    this.$toast('请求失败');
+                })
+            })
+            .catch((err) => {
+                this.$toast('请求失败');
+            })
+
+            
+        },
+
+        searchName() {
+            let params = {
+                eid:this.eid,
+                name:this.value,
+                state:this.state
+            }
+
+            getMyProject(params).then((res) => {
+                if(res && res.length) {
+                    this.myProjectList = res
+                }
+            })
+            .catch((err) => {
+                this.$toast('请求失败');
             })
         }
     },
     created() {
-
+        this.init()
     },
     mounted() {
 
@@ -64,7 +155,18 @@ export default {
 
 <style scoped lang="less">
 .my-p{
-    height: 100%;
+    min-height: 100%;
+    padding-bottom: 60px;
+    padding-top: 60px;
+}
+header{
+    width: 100%;
+    height: 60px;
+    background: #ffffff;
+    position: fixed;
+    top: 0;
+    left:0%;
+    z-index: 1;
 }
 .p-search{
     width:335px;

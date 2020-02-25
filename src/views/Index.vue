@@ -75,7 +75,7 @@ export default {
 
 <style scoped lang="less">
 .index{
-    overflow: hidden;
+    // overflow: hidden;
     height: 100%;
     & /deep/ .van-tabbar{
         height: 48px;

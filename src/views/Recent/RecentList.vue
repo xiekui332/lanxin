@@ -26,7 +26,7 @@
 </template>
 
 <script>
-import { recentList, recentDoneList } from '@/service/api'
+import { recentList, recentDoneList, getPersonalInfo, getMyEid } from '@/service/api'
 import { timestampToTime, getCaptionLine, getCaptionPoint } from '@/service/utils'
 import BScroll from 'better-scroll'
 export default {
@@ -42,7 +42,8 @@ export default {
             doneNum:0,
             data:[],
             active:true,
-            eid:8,       // 临时测试
+            eid:'',       // 临时测试
+            uid:'',
             page:1,
             size:10,
             hasNextPage:false
@@ -107,43 +108,70 @@ export default {
         },
 
         init(type) {
-            let params = {
-                eid: this.eid,
-                page: this.page,
-                size: this.size
-            }
 
-            this.$toast.loading({
-                message: '加载中...',
-                forbidClick: true
-            });
+            // 获取eid
+            getPersonalInfo().then((res) => {
+                this.uid = res.id
+                let params = {
+                    uid:this.uid
+                }
 
-            recentList(params).then((res) => {
-                // console.log(res)
-                this.hasNextPage = res.hasNextPage
-                if(res.list.length) {
-                    for(let i = 0; i < res.list.length; i ++) {
-                        res.list[i].name = res.list[i].name?res.list[i].name:'暂无'
-                        res.list[i].endTime = res.list[i].endTime?timestampToTime(res.list[i].endTime):'暂无'
-                        res.list[i].project = res.list[i].map.countName?getCaptionLine(res.list[i].map.countName, 0):'暂无'
-                        res.list[i].board = res.list[i].map.countName?getCaptionPoint(res.list[i].map.countName, 1):'暂无'
+                getMyEid(params).then((res) => {
+                    if(res && res.length) {
+                        this.eid = res[0].id
                     }
-                }
 
-                if(type && type == 'up') {
-                    this.data = this.data.concat(res.list)
-                }else{
-                    this.data = res.list
-                }
+                    let params = {
+                        eid: this.eid,
+                        page: this.page,
+                        size: this.size
+                    }
 
-                this.todoNum = res.total
-                this.scroll.finishPullUp()
-                this.scroll.refresh()
-                this.$toast.clear()
+                    this.$toast.loading({
+                        message: '加载中...',
+                        forbidClick: true
+                    });
+
+                    this.getDoneList('first')
+
+                    recentList(params).then((res) => {
+                        // console.log(res)
+                        this.hasNextPage = res.hasNextPage
+                        if(res.list.length) {
+                            for(let i = 0; i < res.list.length; i ++) {
+                                res.list[i].name = res.list[i].name?res.list[i].name:'暂无'
+                                res.list[i].endTime = res.list[i].endTime?timestampToTime(res.list[i].endTime):'暂无'
+                                res.list[i].project = res.list[i].map.countName?getCaptionLine(res.list[i].map.countName, 0):'暂无'
+                                res.list[i].board = res.list[i].map.countName?getCaptionPoint(res.list[i].map.countName, 1):'暂无'
+                            }
+                        }
+
+                        if(type && type == 'up') {
+                            this.data = this.data.concat(res.list)
+                        }else{
+                            this.data = res.list
+                        }
+
+                        this.todoNum = res.total
+                        this.scroll.finishPullUp()
+                        this.scroll.refresh()
+                        this.$toast.clear()
+                    })
+                    .catch((err) => {
+                        this.$toast('请求失败');
+                    })
+
+                })
+                .catch((err) => {
+                    this.$toast('请求失败');
+                })
+
             })
             .catch((err) => {
                 this.$toast('请求失败');
             })
+
+            
 
         },
 
@@ -206,14 +234,15 @@ export default {
             this.$router.push({
                 path:'/taskDetail',
                 query: {
-                    id: id
+                    id: id,
+                    eid: this.eid
                 }
             })
         }
     },
     created() {
         this.init()
-        this.getDoneList('first')
+        
     },
     mounted() {
         this.initScroll()

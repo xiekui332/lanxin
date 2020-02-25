@@ -27,21 +27,21 @@
                 </div>
 
                 <div class="word-wrapper">
-                    <div class="word-item" v-for="(item, index) in 4" :key="index">
+                    <div class="word-item" v-for="(item, index) in fileList" :key="index">
                         <div class="item-left">
                             <img class="word-icon" src="../../assets/word.png" alt="">
-                            <span>需求汇总记录.doc</span>
+                            <span @click="getDownload(item)">{{item.name}}</span>
                         </div>
-                        <img class="down-icon" src="../../assets/down.png" alt="">
+                        <img class="down-icon" @click="getDownload(item)" src="../../assets/down.png" alt="">
                     </div>
 
-                    <div class="word-item">
+                    <!-- <div class="word-item">
                         <div class="item-left">
                             <img class="word-icon" src="../../assets/mind.png" alt="">
                             <span>思维导图.xmind</span>
                         </div>
                         <img class="down-icon" src="../../assets/down.png" alt="">
-                    </div>
+                    </div> -->
                 </div>
             </van-tab>
         </van-tabs>
@@ -49,6 +49,7 @@
 </template>
 
 <script>
+import { getFiles } from '@/service/api'
 export default {
     props: {
 
@@ -60,14 +61,17 @@ export default {
         return {
             active:'',
             checked:false,
-            selected:true
+            selected:true,
+            eid:this.$route.query.eid,
+            status:1,
+            fileList:[]
         };
     },
     computed: {
 
     },
     watch: {
-
+        
     },
     methods: {
         toTaskDetails() {
@@ -76,15 +80,57 @@ export default {
             })
         },
         chooseLine(type) {
+            this.fileList = []
             if(type === 1) {
                 this.selected = true
+                this.status = 1
+                this.init()
             }else{
                 this.selected = false
+                this.status = ''
+                let params = {
+                    eid:this.eid
+                }
+                this.init(params)
             }
+            
+        },
+        init(obj) {
+            let params = {}
+            if(obj) {
+                params = obj
+            }else{
+                params = {
+                    eid:this.eid,
+                    status:this.status
+                }
+            }
+            getFiles(params).then((res) => {
+                if(res && res.length) {
+                    this.fileList = res
+                }
+            })
+            .catch((err) => {
+                this.$toast('请求失败');
+            })
+
+        },
+
+        getDownload(item) {
+            // test
+            // item.path = "http://timesheet.pactera.com/Log/Unlockapplicationform.xlsx"
+
+            let a= document.createElement('a');
+            a.href = item.path
+            a.download = item.name
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
     },
     created() {
-
+        this.init()
     },
     mounted() {
 
@@ -148,6 +194,9 @@ export default {
                     font-family:PingFangSC-Regular,PingFang SC;
                     font-weight:400;
                     color:rgba(38,38,38,1);
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
                 }
             }
             

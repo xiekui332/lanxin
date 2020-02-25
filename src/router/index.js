@@ -75,7 +75,7 @@ const routes = [
   {
     path:'/childTaskDetail',
     name:'childTaskDetail',
-    component: () => import('../views/MyProject/ChildTaskDetails.vue'),
+    component: () => import('../views/MyProject/TaskDetails.vue'),
     meta:{
       title:'子任务详情'
     }

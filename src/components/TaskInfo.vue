@@ -95,11 +95,11 @@
                             <span class="name">子任务</span>
                             <div class="child-item" v-for="(item, index) in newSonTask" :key="item.id">
                                 <div class="item-left">
-                                    <van-checkbox v-model="item.checked" :disabled="item.checked" shape="square"></van-checkbox>
+                                    <van-checkbox v-model="item.checked" shape="square" @click="changeChildTask(item, index, item.checked)"></van-checkbox>
                                     <span class="item-txt" @click="toChildTaskDetail()">{{item.name}}</span>
                                 </div>
                                 <div class="item-right">
-                                    <van-icon name="arrow" size=".5rem" color="#DCDCDC" />
+                                    <van-icon name="arrow" size=".5rem" color="#DCDCDC"  @click="toChildTaskDetail()" />
                                 </div>
                             </div>
                         </div>
@@ -127,6 +127,7 @@
 
 <script>
 import { timestampToTime } from "@/service/utils"
+import { searchProDetail, changeDone } from '@/service/api'
 export default {
     props: [
         'task',
@@ -151,7 +152,8 @@ export default {
             newCountName:'',
             goalObj:{},
             remarkObj:{},
-            newSonTask:[]
+            newSonTask:[],
+            stateChange:''
         };
     },
     computed: {
@@ -162,26 +164,41 @@ export default {
             params.startTime = timestampToTime(params.startTime, 2)
             params.endTime = timestampToTime(params.endTime, 2)
             this.newTask = params
-            this.user.push(params.user)
+            
+            if(!params.user.length) {
+                let arr = []
+                let o = {}
+                for(let i in params.user) {
+                    o[i] = params.user[i]
+                }
+
+                arr.push(o)
+                this.user = arr
+            }else{
+                this.user = params.user
+            }
+            
         },
 
         tFileList(params) {
-            if(params && params[2] && params[2].lableList) {
-                this.newTFileList = params[2].lableList
-                if(this.newTFileList.length > 3) {
-                    this.isTag = true
-                }else{
-                    this.isTag = false
+            for(let i = 0; i < params.length; i ++) {
+                if(params[i].name == '标签') {
+                    this.newTFileList = params[i].lableList
+                    if(this.newTFileList.length > 3) {
+                        this.isTag = true
+                    }else{
+                        this.isTag = false
+                    }
+                    this.newTFileList = this.newTFileList.slice(0, 3)
                 }
-                this.newTFileList = this.newTFileList.slice(0, 3)
-            }
 
-            if(params && params[3]) {
-                this.goalObj = params[3]
-            }
+                if(params[i].name == '任务目标') {
+                    this.goalObj = params[i].taskAndFieldList[0]
+                }
 
-            if(params && params[0]) {
-                this.remarkObj = params[0]
+                if(params[i].name == '备注') {
+                    this.remarkObj = params[i].taskAndFieldList[0]
+                }
             }
             
         },
@@ -201,13 +218,6 @@ export default {
         },
 
         sonTask(params) {
-            for(let i = 0; i < params.length; i ++) {
-                if(params[i].state == 0) {
-                    params[i].checked = false
-                }else if(params[i].state == 1) {
-                    params[i].checked = true
-                }
-            }
             this.newSonTask = params
         }
     },
@@ -243,6 +253,44 @@ export default {
                     id: this.$route.query.id
                 }
             })
+        },
+
+        changeChildTask(item, index, checked) {
+            
+            let params = {
+                id: item.id,
+                parentId:item.pid
+            }
+            searchProDetail(params).then((res) => {
+                // res = false
+                if(res) {
+                    // that.newSonTask[index].checked = !that.newSonTask[index].checked
+                    // that.$forceUpdate()
+
+                    if(checked == true) {
+                        this.stateChange = 0
+                    }else{
+                        this.stateChange = 1
+                    }
+
+                    let params = {
+                        taskId:item.id,
+                        stateChange:this.stateChange,
+                        eid: this.$route.query.eid
+                    }
+
+
+                    console.log(item)
+                    // console.log(that.newSonTask)
+                }else{
+                    this.$toast('当前任务不可更改');
+                }
+            })
+            .catch((err) => {
+                this.$toast('请求失败');
+            })
+
+            
         }
     },
     created() {

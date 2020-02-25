@@ -38,14 +38,13 @@ axios.interceptors.request.use(
 
 // 添加 response 拦截器
 axios.interceptors.response.use(config => {
-    // console.log(config)
     if(config.status==200){
         return config.data;
     }
     
     return config;
 }, err => {
-    
+    // console.log(err)
     let config = err.config
     if(!config || !config.retry) return Promise.reject(err)
     config.__retryCount = config.__retryCount || 0;
