@@ -17,18 +17,11 @@ axios.create({
 axios.interceptors.request.use(
     
     config => {
-        // let token = getSession('token')
         
-        // if(token) {
-        //     config.headers = {
-        //         // "Authorization":"Bearer " + JSON.parse(sessionStorage.getItem("token")),
-        //         // 'Content-Type':'application/json'
-        //     }
-        // }else{
         //     $router.push({
         //         path:'/'
         //     })
-        // }
+
         return config;
     }, err => {
         return Promise.reject(err)

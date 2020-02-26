@@ -5,7 +5,7 @@
             <span>{{task.name}}</span>
         </div>
 
-        <!-- <TaskInfo :task='task' :tFileList='tFileList' :userList='userList' :countName='countName' :isChild='isChild' :sonTask='sonTask' /> -->
+        
         <div class="template">
             <div class="container">
                 <div class="content">
@@ -135,7 +135,6 @@
 </template>
 
 <script>
-import TaskInfo from "@/components/TaskInfo";
 import { getProDetail, searchProDetail, changeDone } from '@/service/api'
 import { timestampToTime } from '@/service/utils'
 // import { tFileList } from '@/service/test'
@@ -144,7 +143,7 @@ export default {
 
     },
     components: {
-        TaskInfo
+        
     },
     data() {
         return {

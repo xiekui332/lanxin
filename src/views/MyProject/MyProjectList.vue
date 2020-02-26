@@ -66,7 +66,8 @@ export default {
             this.$router.push({
                 path:'/board',
                 query: {
-                    eid:item.eid
+                    eid:item.eid,
+                    id: item.id
                 }
             })
         },
@@ -103,6 +104,8 @@ export default {
                         getMyProject(params).then((res) => {
                             if(res && res.length) {
                                 this.myProjectList = res
+                            }else{
+                                this.$toast('暂无数据');
                             }
                         })
                         .catch((err) => {
@@ -137,6 +140,8 @@ export default {
             getMyProject(params).then((res) => {
                 if(res && res.length) {
                     this.myProjectList = res
+                }else{
+                    this.$toast('暂无数据');
                 }
             })
             .catch((err) => {

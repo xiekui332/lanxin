@@ -19,10 +19,11 @@ module.exports = {
   runtimeCompiler: true,
   // 生产环境是否生成 sourceMap 文件 sourceMap的详解请看末尾
   productionSourceMap: true,
+  
   // webpack-dev-server 相关配置
   devServer: {
     // 设置代理
-    // hot: true, //热加载
+    hot: true, //热加载
     host: '0.0.0.0', // ip地址
     port: 8080, // 端口
     https: false, // false关闭https，true为开启
@@ -38,12 +39,14 @@ module.exports = {
     //   }
     // }
   },
+
   chainWebpack: config => {
     // 添加别名
     config.resolve.alias.set('@', resolve('src'))
     //   .set('assets', resolve('src/assets'))
     //   .set('components', resolve('src/components'))
   },
+
   configureWebpack: {
     plugins: [
       new CompressionPlugin({

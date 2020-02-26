@@ -15,7 +15,8 @@ export default {
     },
     data() {
         return {
-            tagList:[]
+            tagList:[],
+            
         };
     },
     computed: {

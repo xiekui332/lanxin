@@ -26,3 +26,9 @@ export const getProjectDetail = cab => get('/projects/getUserByPid' + ';JSESSION
 export const getFiles = cab => get('/myModel/getMyFile' + ';JSESSIONID=' + getSession('sessionId'), cab)
 // 查询当前用户在企业下的角色
 export const getEidRole = cab => get('/enterprisePermission/queryEnterprisePermission' + ';JSESSIONID=' + getSession('sessionId'), cab)
+// 项目看板
+export const getBoardList = cab => get('/task/findTaskByGroupId' + ';JSESSIONID=' + getSession('sessionId'), cab)
+// 查询任务分组id
+export const getTaskGroupId = cab => get('/tasks/findGroupTask' + ';JSESSIONID=' + getSession('sessionId'), cab)
+// 查询任务分组id
+export const getUserRole = cab => get('/projectPermission/queryProjectPermission' + ';JSESSIONID=' + getSession('sessionId'), cab)

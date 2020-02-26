@@ -3,23 +3,18 @@
         <van-tabs v-model="active" color="#4377BC" line-width="50%" line-height="2px" title-active-color="#4377BC" title-inactive-color="#262626">
             <van-tab title="看板" title-style="font-size:16px;">
                 <van-swipe :loop="false" :width="320">
-                    <van-swipe-item>
-                        <p class="board-title">需求收集</p>
+                    <van-swipe-item v-for="(item, index) in boardList" :key="item.id">
+                        <p class="board-title">{{item.name}}</p>
                         <div class="board-list-wrapper">
-                            <div class="board-list">
-                                <van-checkbox v-model="checked" shape="square" disabled></van-checkbox>
-                                <span @click="toTaskDetails()">汇总收集的需求</span>
-                            </div>
-                            <div class="board-list">
-                                <van-checkbox v-model="checked" shape="square" ></van-checkbox>
-                                <span @click="toTaskDetails()">汇总收集的需求</span>
+                            <div class="board-list" v-for="(item, index) in item.tasksList" :key="item.id">
+                                <van-checkbox v-model="item.checked" shape="square" @click="changeChildTask(item, index, item.checked)"></van-checkbox>
+                                <span @click="toTaskDetails(item)">{{item.name}}</span>
                             </div>
                         </div>
                     </van-swipe-item>
-                    <van-swipe-item>2</van-swipe-item>
-                    <van-swipe-item>3</van-swipe-item>
                 </van-swipe>
             </van-tab>
+
             <van-tab title="文档" title-style="font-size:16px;">
                 <div class="head-tab">
                     <div :class="[selected?'tab-btn active':'tab-btn']" @click="chooseLine(1)">所有的</div>
@@ -49,7 +44,7 @@
 </template>
 
 <script>
-import { getFiles } from '@/service/api'
+import { getFiles, getBoardList, getTaskGroupId, getUserRole, searchProDetail, changeDone } from '@/service/api'
 export default {
     props: {
 
@@ -63,8 +58,13 @@ export default {
             checked:false,
             selected:true,
             eid:this.$route.query.eid,
+            id:this.$route.query.id,    // 项目id
             status:1,
-            fileList:[]
+            fileList:[],
+            boardList:[],
+            stateChange:'',
+            tid:'',
+            roleId:''
         };
     },
     computed: {
@@ -74,9 +74,13 @@ export default {
         
     },
     methods: {
-        toTaskDetails() {
+        toTaskDetails(item) {
             this.$router.push({
-                path:'/taskDetail'
+                path:'/taskDetail',
+                query: {
+                    id: item.id,
+                    eid: this.eid
+                }
             })
         },
         chooseLine(type) {
@@ -127,10 +131,120 @@ export default {
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
+        },
+
+        initBoardList() {
+            // 查询任务分组id
+            let params = {
+                projectId: this.id
+            }
+
+            getTaskGroupId(params).then((res) => {
+                if(res && res.length) {
+                    this.tid = res[0].id
+                }else{
+                    this.tid = res.id
+                }
+
+                let params = {
+                    projectId:this.id
+                }
+
+                getUserRole(params).then((res) => {
+                    if(res) {
+                        this.roleId = res.roleId
+                    }
+
+                    let params = {
+                        tid: this.tid,
+                        projectId: this.id,
+                        roleId: this.roleId
+                    }
+
+                    getBoardList(params).then((res) => {
+                        if(res && res.length) {
+                            this.boardList = res
+                            for(let i = 0; i < this.boardList.length; i ++) {
+                                for(let j = 0; j < this.boardList[i].tasksList.length; j ++) {
+                                    if(this.boardList[i].tasksList[j].state == 1) {
+                                        this.boardList[i].tasksList[j].checked = true
+                                    }else if(this.boardList[i].tasksList[j].state == 0) {
+                                        this.boardList[i].tasksList[j].checked = false
+                                    }
+                                }
+                            }
+                        }else{
+                            this.$toast('暂无数据');
+                        }
+                    })
+                    .catch((err) => {
+                        this.$toast('请求失败');
+                    })
+                })
+                .catch((err) => {
+                    this.$toast('请求失败');
+                })
+
+            })
+            .catch((err) => {
+                this.$toast('请求失败');
+            })
+        },
+
+        changeChildTask(item, index, checked) {
+           
+            let params = {
+                id: item.id,
+                parentId:item.pid
+            }
+
+            
+            searchProDetail(params).then((res) => {
+                // res = false
+                if(res) {
+                    this.$forceUpdate()
+                    if(checked == true) {
+                        this.stateChange = 0
+                    }else{
+                        this.stateChange = 1
+                    }
+
+                    let params = {
+                        taskId:item.id,
+                        stateChange:this.stateChange,
+                        eid: this.eid
+                    }
+
+                    changeDone(params).then((res) => {
+                        if(res) {
+                            this.$toast('修改成功');
+                            
+                        }else{
+                            this.$toast('修改失败');
+                        }
+                        
+                    })
+                    .catch((err) => {
+                        this.$toast('请求失败');
+                    })
+
+
+                }else{
+                    this.$toast('当前任务不可更改');
+                }
+            })
+            .catch((err) => {
+                this.$toast('请求失败');
+            })
+
+            
         }
     },
     created() {
+        // 获取文档
         this.init()
+        // 获取看板
+        this.initBoardList()
     },
     mounted() {
 
